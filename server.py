@@ -8,7 +8,7 @@ import time
 
 class WebSocketServer:
     def __init__(self, host, port):
-        """Initialize the WebSocket server with host and port."""
+        # """Initialize the WebSocket server with host and port."""
         self.host = host
         self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -17,7 +17,7 @@ class WebSocketServer:
         self.subprotocols = []
 
     def start(self):
-        """Start the WebSocket server and listen for incoming connections."""
+        # """Start the WebSocket server and listen for incoming connections."""
         self.sock.bind((self.host, self.port))
         self.sock.listen(5)
         print(f"WebSocket server started on {self.host}:{self.port}")
@@ -29,7 +29,7 @@ class WebSocketServer:
             client_thread.start()
 
     def handle_client(self, client_socket):
-        """Handle a client connection."""
+        # """Handle a client connection."""
         try:
             self.handshake(client_socket)
             self.handle_websocket_frames(client_socket)
@@ -39,7 +39,7 @@ class WebSocketServer:
             client_socket.close()
 
     def handshake(self, client_socket):
-        """Perform the WebSocket handshake with the client."""
+        # """Perform the WebSocket handshake with the client."""
         data = client_socket.recv(1024).decode('utf-8')
         
         if "Upgrade: websocket" in data and "Connection: Upgrade" in data:
@@ -73,14 +73,14 @@ class WebSocketServer:
             raise Exception("Invalid WebSocket upgrade request")
 
     def generate_accept_key(self, key):
-        """Generate the Sec-WebSocket-Accept key for the handshake."""
+        # """Generate the Sec-WebSocket-Accept key for the handshake."""
         GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
         hash_key = key + GUID
         sha1 = hashlib.sha1(hash_key.encode()).digest()
         return base64.b64encode(sha1).decode()
 
     def handle_websocket_frames(self, client_socket):
-        """Handle incoming WebSocket frames."""
+        # """Handle incoming WebSocket frames."""
         fragmented_message = bytearray()
         fragmented_opcode = None
 
@@ -114,7 +114,7 @@ class WebSocketServer:
                 break
 
     def handle_continuation_frame(self, client_socket, frame, fragmented_message, fragmented_opcode):
-        """Handle a continuation frame."""
+        # """Handle a continuation frame."""
         if fragmented_opcode is None:
             raise Exception("Received continuation frame without start frame")
         fragmented_message.extend(frame['payload'])
@@ -122,14 +122,14 @@ class WebSocketServer:
             self.handle_complete_message(client_socket, fragmented_opcode, fragmented_message)
 
     def handle_data_frame(self, client_socket, frame, fragmented_message, fragmented_opcode):
-        """Handle a data frame (text or binary)."""
+        # """Handle a data frame (text or binary)."""
         if fragmented_opcode is not None:
             raise Exception("Received new data frame before completing fragmented message")
         if frame['fin']:
             self.handle_complete_message(client_socket, frame['opcode'], frame['payload'])
 
     def handle_complete_message(self, client_socket, opcode, payload):
-        """Handle a complete message (fragmented or unfragmented)."""
+        # """Handle a complete message (fragmented or unfragmented)."""
         if opcode == 0x1:  # Text
             message = payload.decode('utf-8')
             print(f"Received text message: {message}")
@@ -141,7 +141,7 @@ class WebSocketServer:
             self.send_binary_frame(client_socket, payload)
 
     def handle_close_frame(self, client_socket, frame):
-        """Handle a close frame."""
+        # """Handle a close frame."""
         code = 1000
         reason = ""
         if len(frame['payload']) >= 2:
@@ -151,16 +151,16 @@ class WebSocketServer:
         self.send_close_frame(client_socket, code, reason)
 
     def handle_ping_frame(self, client_socket, frame):
-        """Handle a ping frame."""
+        # """Handle a ping frame."""
         print(f"Received Ping: {frame['payload']}")
         self.send_pong_frame(client_socket, frame['payload'])
 
     def handle_pong_frame(self, frame):
-        """Handle a pong frame."""
+        # """Handle a pong frame."""
         print(f"Received Pong: {frame['payload']}")
 
     def receive_frame(self, client_socket):
-        """Receive and parse a WebSocket frame."""
+        # """Receive and parse a WebSocket frame."""
         header = client_socket.recv(2)
         if not header:
             raise Exception("Client closed connection")
@@ -194,11 +194,11 @@ class WebSocketServer:
         }
 
     def unmask_payload(self, payload, masking_key):
-        """Unmask the payload of a WebSocket frame."""
+        # """Unmask the payload of a WebSocket frame."""
         return bytes(payload[i] ^ masking_key[i % 4] for i in range(len(payload)))
 
     def send_frame(self, client_socket, payload, opcode):
-        """Send a WebSocket frame."""
+        # """Send a WebSocket frame."""
         header = struct.pack('!B', 0b10000000 | opcode)
         length = len(payload)
 
@@ -212,23 +212,23 @@ class WebSocketServer:
         client_socket.send(header + payload)
 
     def send_text_frame(self, client_socket, message):
-        """Send a text frame."""
+        # """Send a text frame."""
         self.send_frame(client_socket, message.encode('utf-8'), 0x1)
 
     def send_binary_frame(self, client_socket, data):
-        """Send a binary frame."""
+        # """Send a binary frame."""
         self.send_frame(client_socket, data, 0x2)
 
     def send_ping_frame(self, client_socket, data=b''):
-        """Send a ping frame."""
+        # """Send a ping frame."""
         self.send_frame(client_socket, data, 0x9)
 
     def send_pong_frame(self, client_socket, data=b''):
-        """Send a pong frame."""
+        # """Send a pong frame."""
         self.send_frame(client_socket, data, 0xA)
 
     def send_close_frame(self, client_socket, code=1000, reason=""):
-        """Send a close frame."""
+        # """Send a close frame."""
         payload = struct.pack('!H', code) + reason.encode('utf-8')
         self.send_frame(client_socket, payload, 0x8)
 
